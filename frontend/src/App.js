@@ -32,12 +32,12 @@ function App() {
 
   return (
     <div>
-      {/* {user ? (
+      {user ? (
         <Dashboard user={user} onLogout={handleLogout} />
       ) : (
         <Login onLoginSuccess={handleLoginSuccess} />
-      )} */}
-      <Dashboard user={user} onLogout={handleLogout}/>
+      )}
+      {/* <Dashboard user={user} onLogout={handleLogout}/> */}
     </div>
   );
 }
