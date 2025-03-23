@@ -18,12 +18,12 @@ function StudentBloomReport({ studentId, assessmentId }) {
   }, []);
 
   const fetchStudents = async () => {
-    const res = await axios.get('http://localhost:5000/api/students');
+    const res = await axios.get('/api/students');
     setAllStudents(res.data.students);
   };
 
   const fetchAssessments = async () => {
-    const res = await axios.get('http://localhost:5000/api/assessments');
+    const res = await axios.get('/api/assessments');
     setAllAssessments(res.data.assessments);
   };
 
@@ -33,7 +33,7 @@ function StudentBloomReport({ studentId, assessmentId }) {
       return;
     }
     const res = await axios.get(
-      `http://localhost:5000/api/attempts/report/${selectedStudent}/${selectedAssessment}`
+      `/api/attempts/report/${selectedStudent}/${selectedAssessment}`
     );
     setReportData(res.data.levelSummary);
   };

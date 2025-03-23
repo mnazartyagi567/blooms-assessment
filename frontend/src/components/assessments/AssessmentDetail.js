@@ -28,23 +28,23 @@ function AssessmentDetail({ assessmentId }) {
   }, []);
 
   const fetchAssessmentQuestions = async () => {
-    const res = await axios.get(`http://localhost:5000/api/assessments/${assessmentId}/questions`);
+    const res = await axios.get(`/api/assessments/${assessmentId}/questions`);
     setQuestions(res.data.questions);
   };
 
   const fetchAllQuestions = async () => {
-    const res = await axios.get('http://localhost:5000/api/questions');
+    const res = await axios.get('/api/questions');
     setAllQuestions(res.data.questions);
   };
 
   const fetchStudents = async () => {
-    const res = await axios.get('http://localhost:5000/api/students');
+    const res = await axios.get('/api/students');
     setStudents(res.data.students);
   };
 
   const handleAddQuestion = async () => {
     if (!selectedQuestionId) return;
-    await axios.post('http://localhost:5000/api/assessments/add-question', {
+    await axios.post('/api/assessments/add-question', {
       assessment_id: assessmentId,
       question_id: selectedQuestionId
     });
@@ -53,7 +53,7 @@ function AssessmentDetail({ assessmentId }) {
   };
 
   const handleSaveGrades = async (question_id) => {
-    await axios.post('http://localhost:5000/api/grades', {
+    await axios.post('/api/grades', {
       assessment_id: assessmentId,
       question_id,
       grade_a_count: gradeData.grade_a_count,
@@ -77,7 +77,7 @@ function AssessmentDetail({ assessmentId }) {
       alert('Select a student first.');
       return;
     }
-    await axios.post('http://localhost:5000/api/attempts', {
+    await axios.post('/api/attempts', {
       student_id: selectedStudentId,
       assessment_id: assessmentId,
       question_id,

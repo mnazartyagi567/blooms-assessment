@@ -13,7 +13,7 @@ function StudentList() {
   });
 
   const fetchStudents = async () => {
-    const res = await axios.get('http://localhost:5000/api/students');
+    const res = await axios.get('/api/students');
     setStudents(res.data.students);
   };
 
@@ -27,7 +27,7 @@ function StudentList() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post('http://localhost:5000/api/students', formData);
+    await axios.post('/api/students', formData);
     setFormData({
       name: '',
       roll_no: '',

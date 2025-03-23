@@ -14,7 +14,7 @@ function AssessmentReport({ assessmentId }) {
   }, []);
 
   const fetchReport = async () => {
-    const res = await axios.get(`http://localhost:5000/api/grades/report/${assessmentId}`);
+    const res = await axios.get(`/api/grades/report/${assessmentId}`);
     setReportData(res.data);
   };
 

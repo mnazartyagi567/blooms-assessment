@@ -10,12 +10,12 @@ function AssessmentsList({ onSelectAssessment, onViewReport }) {
   const [selectedCourse, setSelectedCourse] = useState('');
 
   const fetchAssessments = async () => {
-    const res = await axios.get('http://localhost:5000/api/assessments');
+    const res = await axios.get('/api/assessments');
     setAssessments(res.data.assessments);
   };
 
   const fetchCourses = async () => {
-    const res = await axios.get('http://localhost:5000/api/courses');
+    const res = await axios.get('/api/courses');
     setCourses(res.data.courses);
   };
 
@@ -26,7 +26,7 @@ function AssessmentsList({ onSelectAssessment, onViewReport }) {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    await axios.post('http://localhost:5000/api/assessments', {
+    await axios.post('/api/assessments', {
       name,
       date,
       course_id: selectedCourse

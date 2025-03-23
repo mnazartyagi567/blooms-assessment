@@ -13,7 +13,7 @@ function CourseList() {
   });
 
   const fetchCourses = async () => {
-    const res = await axios.get('http://localhost:5000/api/courses');
+    const res = await axios.get('/api/courses');
     setCourses(res.data.courses);
   };
 
@@ -27,7 +27,7 @@ function CourseList() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post('http://localhost:5000/api/courses', formData);
+    await axios.post('/api/courses', formData);
     setFormData({
       name: '',
       code: '',

@@ -15,7 +15,7 @@ function QuestionMapping() {
 
   const fetchQuestions = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/questions');
+      const res = await axios.get('/api/questions');
       setQuestions(res.data.questions);
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -33,7 +33,7 @@ function QuestionMapping() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/questions', formData);
+      await axios.post('/api/questions', formData);
       setFormData({
         question_no: '',
         level: '',
