@@ -2,7 +2,7 @@
     "name": "my-app-root",
     "version": "1.0.0",
     "engines": {
-        "node": "18.x"
+        "node": "16.x"
       },
     "scripts": {
       "build": "NODE_OPTIONS=--openssl-legacy-provider cd frontend && npm install && npm run build",
