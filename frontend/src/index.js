@@ -1,13 +1,15 @@
-// frontend/src/index.js
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+// src/index.js
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import axios from 'axios';
+import App from './App';
+
+const token = localStorage.getItem('token');
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+root.render(<App />);

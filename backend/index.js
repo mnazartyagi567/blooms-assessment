@@ -1,10 +1,12 @@
 // backend/index.js
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
+// (Reuse your existing route files for questions, assessments, etc.)
 const questionRoutes = require('./routes/questions');
 const assessmentRoutes = require('./routes/assessments');
 const gradeRoutes = require('./routes/grades');
@@ -12,31 +14,85 @@ const studentRoutes = require('./routes/students');
 const courseRoutes = require('./routes/courses');
 const attemptRoutes = require('./routes/attempts');
 
+const { authenticate, authorize } = require('./middleware/auth');
+
 const app = express();
-// Use the PORT from environment variables or default to 5000
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// 1) Serve the React build folder
+// Serve React
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-// 2) Your existing API routes
+// Public auth
 app.use('/api/auth', authRoutes);
-app.use('/api/questions', questionRoutes);
-app.use('/api/assessments', assessmentRoutes);
-app.use('/api/grades', gradeRoutes); 
-app.use('/api/students', studentRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/attempts', attemptRoutes);
 
-// 3) If no API route matches, serve the React index.html (the "catch-all" route)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-});
+// Teacher‐only
+app.use('/api/questions', authenticate, authorize(['teacher']), questionRoutes);
+app.use(
+  '/api/assessments',
+  authenticate,
+  authorize(['teacher']),
+  assessmentRoutes
+);
+app.use('/api/grades', authenticate, authorize(['teacher']), gradeRoutes);
+app.use('/api/students', authenticate, authorize(['teacher']), studentRoutes);
+app.use('/api/courses', authenticate, authorize(['teacher']), courseRoutes);
 
-// 4) Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Student attempts & teacher can read them both
+app.use('/api/attempts', authenticate, attemptRoutes);
+
+// Student‐only final summary
+app.get(
+  '/api/results/final',
+  authenticate,
+  authorize(['student']),
+  (req, res) => {
+    const db = require('./config/db');
+    db.all(
+      `SELECT level,
+              COUNT(*) AS total,
+              SUM(is_correct) AS correct
+         FROM student_assessment_attempts
+        WHERE student_id = ?
+        GROUP BY level`,
+      [req.user.id],
+      (e, rows) => {
+        if (e) return res.status(500).json({ error: e.message });
+        res.json({ summary: rows });
+      }
+    );
+  }
+);
+
+// Teacher‐only class summary (stub)
+app.get(
+  '/api/results/class-summary/:aid',
+  authenticate,
+  authorize(['teacher']),
+  (req, res) => {
+    const db = require('./config/db');
+    db.all(
+      `SELECT student_id,
+              level,
+              COUNT(*) AS total,
+              SUM(is_correct) AS correct
+         FROM student_assessment_attempts
+        WHERE assessment_id = ?
+        GROUP BY student_id, level`,
+      [req.params.aid],
+      (e, rows) => {
+        if (e) return res.status(500).json({ error: e.message });
+        res.json({ classSummary: rows });
+      }
+    );
+  }
+);
+
+// All other routes → React
+app.get('*', (req, res) =>
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'))
+);
+
+app.listen(PORT, () => console.log(`Listening on ${PORT}`));

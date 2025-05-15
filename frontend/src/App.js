@@ -1,45 +1,36 @@
 // src/App.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 import Login from './components/Login';
-import Dashboard from './components/Dashboard';
+import TeacherDashboard from './components/TeacherDashboard';
+import StudentDashboard from './components/StudentDashboard';
 
-function App() {
-  const [user, setUser] = useState(null);
+export default function App() {
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [role, setRole] = useState(localStorage.getItem('role'));
 
-  useEffect(() => {
-    // Check if there's a logged-in user in localStorage
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
-
-  const handleLoginSuccess = (loggedInUser) => {
-    // Store user in state
-    setUser(loggedInUser);
-    // Also persist in localStorage
-    localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+  const onLoginSuccess = ({ token, role }) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('role', role);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setToken(token);
+    setRole(role);
   };
 
-  const handleLogout = () => {
-    // Clear user from state
-    setUser(null);
-    // Remove from localStorage
-    localStorage.removeItem('loggedInUser');
-    // Optionally also remove the last viewed page if you like
-    localStorage.removeItem('currentView');
+  const onLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    delete axios.defaults.headers.common['Authorization'];
+    setToken(null);
+    setRole(null);
   };
 
-  return (
-    <div>
-      {user ? (
-        <Dashboard user={user} onLogout={handleLogout} />
-      ) : (
-        <Login onLoginSuccess={handleLoginSuccess} />
-      )}
-      {/* <Dashboard user={user} onLogout={handleLogout}/> */}
-    </div>
+  if (!token) {
+    return <Login onLoginSuccess={onLoginSuccess} />;
+  }
+  return role === 'teacher' ? (
+    <TeacherDashboard onLogout={onLogout} />
+  ) : (
+    <StudentDashboard onLogout={onLogout} />
   );
 }
-
-export default App;

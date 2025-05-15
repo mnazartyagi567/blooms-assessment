@@ -2,65 +2,51 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function Login({ onLoginSuccess }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+export default function Login({ onLoginSuccess }) {
+  const [form, setForm] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg('');
     try {
-      const res = await axios.post('/api/auth/login', {
-        username,
-        password
-      });
-      onLoginSuccess(res.data.user);
-    } catch (error) {
-      setErrorMsg(error.response?.data?.error || 'Login failed');
+      const { data } = await axios.post('/api/auth/login', form);
+      onLoginSuccess(data);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Login failed');
     }
   };
 
   return (
-    <div
-      className="d-flex flex-column justify-content-center align-items-center"
-      style={{ minHeight: '100vh' }}
-    >
-      <div className="card shadow" style={{ maxWidth: '400px', width: '100%' }}>
-        <div className="card-body">
-          <h2 className="text-center mb-4">Instructor Login</h2>
-          {errorMsg && <div className="alert alert-danger">{errorMsg}</div>}
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label">Username</label>
-              <input
-                className="form-control"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                placeholder="Enter username"
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Password</label>
-              <input
-                className="form-control"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Enter password"
-              />
-            </div>
-            <button type="submit" className="btn btn-primary w-100">
-              Login
-            </button>
-          </form>
+    <div className="container mt-5" style={{ maxWidth: 400 }}>
+      <h3>Login</h3>
+      {error && <div className="alert alert-danger">{error}</div>}
+      <form onSubmit={handleSubmit}>
+        <div className="mb-3">
+          <label className="form-label">Username</label>
+          <input
+            className="form-control"
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            required
+          />
         </div>
-      </div>
+        <div className="mb-3">
+          <label className="form-label">Password</label>
+          <input
+            type="password"
+            className="form-control"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <button className="btn btn-primary w-100">Login</button>
+      </form>
     </div>
   );
 }
-
-export default Login;
