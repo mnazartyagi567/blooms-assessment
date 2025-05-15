@@ -1,12 +1,11 @@
 // backend/routes/grades.js
-const express = require('express');
-const router = express.Router();
-const gradeController = require('../controllers/gradeController');
-const reportController = require('../controllers/reportController');
+const express = require('express')
+const router  = express.Router()
+const Grades  = require('../controllers/gradesController')
 
-router.post('/', gradeController.saveGradeDistribution);
+// GET existing counts for one question
+router.get('/:assessmentId/:questionId', Grades.getGrades)
+// POST new counts
+router.post('/', Grades.saveGrades)
 
-// Aggregated Bloom's-based report
-router.get('/report/:assessmentId', reportController.getAssessmentReport);
-
-module.exports = router;
+module.exports = router

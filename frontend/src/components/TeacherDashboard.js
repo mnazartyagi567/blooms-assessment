@@ -1,118 +1,71 @@
-// src/components/TeacherDashboard.js
+// src/components/TeacherDashboard.jsx
 import React, { useState } from 'react';
-import QuestionMapping from './QuestionMapping';
-import CourseList from './CourseList';
-import StudentList from './StudentList';
-import AssessmentsList from './assessments/AssessmentsList';
-import AssessmentDetail from './assessments/AssessmentDetail';
-// import TeacherReport from './TeacherReport';
+import QuestionMapping       from './QuestionMapping';
+import CourseList            from './CourseList';
+import StudentList           from './StudentList';
+import AssessmentsList       from './assessments/AssessmentsList';
+import AssessmentDetail      from './assessments/AssessmentDetail';
+import AssessmentReport      from './assessments/AssessmentReport';
 
-export default function TeacherDashboard({ onLogout }) {
-  const [view, setView] = useState('questions');
-  const [selAssessment, setSelAssessment] = useState(null);
+export default function TeacherDashboard({ user, onLogout }) {
+  const [view, setView]               = useState('questions');
+  const [selectedAssessmentId, setA]  = useState(null);
 
-  // when instructor clicks "Details" on AssessmentsList:
-  const handleSelectAssessment = (id) => {
-    setSelAssessment(id);
+  const handleSelectAsmt = id => {
+    setA(id);
     setView('assessmentDetail');
   };
 
-  // when instructor clicks "Class Summary" on AssessmentsList:
-  const handleViewReport = (id) => {
-    setSelAssessment(id);
-    setView('classReport');
+  const handleViewReport = id => {
+    setA(id);
+    setView('assessmentReport');
   };
 
   return (
-    <div>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div className="container">
-          <span className="navbar-brand">Teacher Panel</span>
-          <button className="btn btn-danger ms-auto" onClick={onLogout}>
-            Logout
+    <div className="container py-4">
+      <header className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Teacher Dashboard</h2>
+        <button className="btn btn-danger" onClick={onLogout}>Logout</button>
+      </header>
+
+      <nav className="nav nav-tabs mb-4">
+        {['questions','courses','students','assessments','classReport'].map(v => (
+          <button
+            key={v}
+            className={`nav-link ${view===v?'active':''}`}
+            onClick={() => setView(v)}
+          >
+            {v === 'questions'     && 'Questions'}
+            {v === 'courses'       && 'Courses'}
+            {v === 'students'      && 'Students'}
+            {v === 'assessments'   && 'Assessments'}
+            {v === 'classReport'   && 'Class Summary'}
           </button>
-        </div>
+        ))}
       </nav>
 
-      <div className="container my-4">
-        {/* Navigation Tabs */}
-        <ul className="nav nav-tabs mb-4">
-          <li className="nav-item">
-            <button
-              className={`nav-link ${view === 'questions' ? 'active' : ''}`}
-              onClick={() => setView('questions')}
-            >
-              Questions
-            </button>
-          </li>
-          <li className="nav-item">
-            <button
-              className={`nav-link ${view === 'courses' ? 'active' : ''}`}
-              onClick={() => setView('courses')}
-            >
-              Courses
-            </button>
-          </li>
-          <li className="nav-item">
-            <button
-              className={`nav-link ${view === 'students' ? 'active' : ''}`}
-              onClick={() => setView('students')}
-            >
-              Students
-            </button>
-          </li>
-          <li className="nav-item">
-            <button
-              className={`nav-link ${view === 'assessments' ? 'active' : ''}`}
-              onClick={() => setView('assessments')}
-            >
-              Assessments
-            </button>
-          </li>
-          <li className="nav-item">
-            <button
-              className={`nav-link ${
-                view === 'classReport' ? 'active' : ''
-              }`}
-              onClick={() => {
-                setSelAssessment(null);
-                setView('classReport');
-              }}
-            >
-              Class Summary
-            </button>
-          </li>
-        </ul>
+      {view === 'questions'    && <QuestionMapping /> }
+      {view === 'courses'      && <CourseList />      }
+      {view === 'students'     && <StudentList />     }
 
-        {/* Views */}
-        {view === 'questions' && <QuestionMapping />}
+      {view === 'assessments'  &&
+        <AssessmentsList
+          onSelectAssessment={handleSelectAsmt}
+          onViewReport={handleViewReport}
+        />
+      }
 
-        {view === 'courses' && <CourseList />}
+      {view === 'assessmentDetail' && selectedAssessmentId &&
+        <AssessmentDetail assessmentId={selectedAssessmentId} />
+      }
 
-        {view === 'students' && <StudentList />}
+      {view === 'assessmentReport' && selectedAssessmentId &&
+        <AssessmentReport assessmentId={selectedAssessmentId} />
+      }
 
-        {view === 'assessments' && (
-          <AssessmentsList
-            onSelectAssessment={handleSelectAssessment}
-            onViewReport={handleViewReport}
-          />
-        )}
-
-        {view === 'assessmentDetail' && selAssessment && (
-          <AssessmentDetail assessmentId={selAssessment} />
-        )}
-
-        {/* {view === 'classReport' && (
-          // if selAssessment is set, show that assessment's report
-          selAssessment ? (
-            <TeacherReport assessmentId={selAssessment} />
-          ) : (
-            <p className="text-muted">
-              Select an assessment’s “View Report” button in the Assessments tab
-            </p>
-          )
-        )} */}
-      </div>
+      {view === 'classReport' && selectedAssessmentId == null &&
+        <p>Please select an assessment above to view the class summary.</p>
+      }
     </div>
   );
 }

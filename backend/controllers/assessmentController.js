@@ -4,7 +4,6 @@ const assessmentModel = require('../models/assessment');
 exports.createAssessment = (req, res) => {
   const { name, date, course_id } = req.body;
   if (!name) return res.status(400).json({ error: "Assessment name is required." });
-
   assessmentModel.create(name, date, course_id, (err, id) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Assessment created", id });
@@ -23,7 +22,6 @@ exports.addQuestion = (req, res) => {
   if (!assessment_id || !question_id) {
     return res.status(400).json({ error: "assessment_id and question_id are required." });
   }
-
   assessmentModel.addQuestionToAssessment(assessment_id, question_id, (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Question added to assessment" });

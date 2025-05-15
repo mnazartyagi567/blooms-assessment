@@ -1,43 +1,50 @@
-// src/components/StudentDashboard.js
+// src/components/StudentDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import AssessmentsList  from './assessments/AssessmentsList';
+import StudentReport    from './StudentReport';
+import axios            from 'axios';
 
-export default function StudentDashboard({ onLogout }) {
-  const [summary, setSummary] = useState([]);
+export default function StudentDashboard({ user, onLogout }) {
+  const [assessments, setAssessments]     = useState([]);
+  const [selectedAssessmentId, setSel]    = useState(null);
 
   useEffect(() => {
-    axios
-      .get('/api/results/final')
-      .then((res) => setSummary(res.data.summary))
-      .catch(console.error);
+    axios.get('/api/assessments')
+         .then(r => setAssessments(r.data.assessments));
   }, []);
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center">
-        <h2>Your Bloom Summary</h2>
-        <button className="btn btn-danger" onClick={onLogout}>
-          Logout
-        </button>
-      </div>
-      <table className="table table-striped mt-3">
-        <thead>
-          <tr>
-            <th>Level</th>
-            <th>Correct</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {summary.map((r) => (
-            <tr key={r.level}>
-              <td>{r.level}</td>
-              <td>{r.correct}</td>
-              <td>{r.total}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="container py-4">
+      <header className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Student Dashboard</h2>
+        <button className="btn btn-danger" onClick={onLogout}>Logout</button>
+      </header>
+
+      {!selectedAssessmentId ? (
+        <>
+          <h4>Available Assessments</h4>
+          <ul className="list-group">
+            {assessments.map(a => (
+              <li key={a.id} className="list-group-item d-flex justify-content-between">
+                <span>
+                  <strong>{a.name}</strong> {a.date && `(${a.date})`}
+                </span>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => setSel(a.id)}
+                >
+                  View My Report
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <StudentReport
+          studentId={user.id}
+          assessmentId={selectedAssessmentId}
+        />
+      )}
     </div>
   );
 }

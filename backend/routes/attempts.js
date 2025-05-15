@@ -1,16 +1,14 @@
 // backend/routes/attempts.js
-const express = require('express');
-const router = express.Router();
-const attemptController = require('../controllers/attemptController');
-const reportController = require('../controllers/reportController');
+const express  = require('express');
+const router   = express.Router();
+const Attempts = require('../controllers/attemptsController');
 
-// Record an individual attempt
-router.post('/', attemptController.saveAttempt);
+// 1) Record a student's score on one question
+//    POST /api/attempts/record
+router.post('/record', Attempts.recordAttempt);
 
-// Get attempts for a student & assessment
-router.get('/:studentId/:assessmentId', attemptController.getStudentAssessmentAttempts);
-
-// Individual student bloom report
-router.get('/report/:studentId/:assessmentId', reportController.getStudentBloomReport);
+// 2) Fetch per‐level summary for one student & assessment
+//    GET /api/attempts/report/:studentId/:assessmentId
+router.get('/report/:studentId/:assessmentId', Attempts.getStudentReport);
 
 module.exports = router;

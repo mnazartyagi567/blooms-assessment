@@ -2,220 +2,452 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// 1) EXACT Bloom’s Verbs from your reference image, grouped by level
+// 1) Bloom’s verbs grouped by level
 const bloomKeywords = {
   Remembering: [
-    "define","describe","examine","identify","label","list","locate","match",
-    "memorize","name","omit","recall","recite","recognize","record","repeat",
-    "reproduce","retell","select","state","tabulate","tell","visualize"
+    "define",
+    "describe",
+    "examine",
+    "identify",
+    "label",
+    "list",
+    "locate",
+    "match",
+    "memorize",
+    "recall",
+    "recite",
+    "recognize",
+    "record",
+    "reproduce",
+    "retell",
+    "select",
+    "state",
+    "tabulate",
+    "tell",
+    "visualize"
   ],
+
   Understanding: [
-    "associate","classify","cite","compare","contrast","convert","describe",
-    "differentiate","discover","discuss","distinguish","estimate","explain",
-    "express","extend","generalize","give examples","group","identify",
-    "illustrate","indicate","infer","interpret","judge","observe","order",
-    "paraphrase","predict","relate","report","represent","research","restate",
-    "review","rewrite","select","show","summarize","trace","transform","translate"
+    "associate",
+    "classify",
+    "compare",
+    "contrast",
+    "convert",
+    "describe",
+    "discuss",
+    "distinguish",
+    "explain",
+    "generalize",
+    "give examples",
+    "group",
+    "illustrate",
+    "interpret",
+    "order",
+    "paraphrase",
+    "predict",
+    "relate",
+    "report",
+    "represent",
+    "research",
+    "restate",
+    "review",
+    "rewrite",
+    "select",
+    "show",
+    "summarize",
+    "trace",
+    "transform",
+    "translate"
   ],
+
   Applying: [
-    "apply","articulate","calculate","change","chart","choose",
-    "collect","complete","compute","construct","determine","develop","discover",
-    "dramatize","employ","establish","examine","experiment","explain","illustrate",
-    "interpret","judge","manipulate","modify","operate","practice","predict",
-    "prepare","produce","record","relate","report","schedule","simulate","sketch",
-    "solve","teach","transfer","write"
+    "apply",
+    "articulate",
+    "calculate",
+    "change",
+    "chart",
+    "choose",
+    "compute",
+    "construct",
+    "demonstrate",
+    "employ",
+    "examine",
+    "experiment",
+    "illustrate",
+    "implement",
+    "interpret",
+    "manipulate",
+    "modify",
+    "operate",
+    "practice",
+    "predict",
+    "produce",
+    "relate",
+    "report",
+    "schedule",
+    "sketch",
+    "solve",
+    "transfer"
   ],
+
   Analyzing: [
-    "analyze","categorize","classify","compare",
-    "conclude","connect","contrast","correlate","criticize","deduce","devise",
-    "diagram","differentiate","discriminate","dissect","distinguish","divide",
-    "estimate","evaluate","examine","explain","focus","illustrate","infer","order",
-    "organize","plan","prioritize","select","separate","subdivide","survey","test"
+    "analyze",
+    "categorize",
+    "classify",
+    "compare",
+    "contrast",
+    "deduce",
+    "diagram",
+    "differentiate",
+    "discriminate",
+    "dissect",
+    "distinguish",
+    "divide",
+    "estimate",
+    "experiment",
+    "identify",
+    "infer",
+    "inspect",
+    "order",
+    "organize",
+    "prioritize",
+    "question",
+    "separate",
+    "survey",
+    "test"
   ],
+
   Evaluating: [
-    "appraise","argue","assess","award","choose","compare","conclude",
-    "consider","convince","criticize","critique","debate","decide","defend",
-    "determine","discriminate","distinguish","editorialize","estimate","evaluate",
-    "find errors","grade","judge","justify","measure","order","persuade","predict",
-    "rank","rate","recommend","reframe","score","select","summarize","support",
-    "test","weigh"
+    "appraise",
+    "argue",
+    "assess",
+    "choose",
+    "compare",
+    "conclude",
+    "criticize",
+    "critique",
+    "debate",
+    "defend",
+    "determine",
+    "discriminate",
+    "distinguish",
+    "estimate",
+    "evaluate",
+    "grade",
+    "judge",
+    "justify",
+    "measure",
+    "predict",
+    "rank",
+    "rate",
+    "recommend",
+    "reframe",
+    "summarize",
+    "support"
   ],
+
   Creating: [
-    "adapt","assemble","compose",
-    "construct","create","delete","design","develop","discuss","elaborate","estimate",
-    "express","facilitate","formulate","generalize","happen","hypothesize","infer",
-    "integrate","intervene","invent","justify","manage","maximize","minimize",
-    "modify","negotiate","originate","plan","prepare","produce","propose",
-    "rearrange","reorganize","report","revise","rewrite","role-play","simulate",
-    "solve","speculate","structure","suppose","test","theory","validate","write"
+    "adapt",
+    "assemble",
+    "compose",
+    "construct",
+    "create",
+    "design",
+    "develop",
+    "elaborate",
+    "formulate",
+    "generalize",
+    "generate",
+    "hypothesize",
+    "imagine",
+    "improve",
+    "invent",
+    "make up",
+    "maximize",
+    "minimize",
+    "manage",
+    "modify",
+    "originate",
+    "plan",
+    "prepare",
+    "produce",
+    "propose",
+    "rearrange",
+    "reorganize",
+    "revise",
+    "role-play",
+    "speculate",
+    "structure",
+    "test",
+    "validate"
   ]
-};
+}
 
-function QuestionMapping() {
+export default function QuestionMapping() {
   const [questions, setQuestions] = useState([]);
-
-  // 2) The form data includes level and keywords (and optional CO/PO)
   const [formData, setFormData] = useState({
     question_no: '',
+    question_text: '',
     level: '',
-    keywords: '',
+    keywords: [],
     specification: '',
     co: '',
     po: ''
   });
+  // hold any user‐added keywords for the current question
+  const [customKeywords, setCustomKeywords] = useState([]);
+  const [pendingKeyword, setPendingKeyword] = useState('');
 
-  // Fetch existing questions on mount
-  const fetchQuestions = async () => {
-    try {
-      // Use a relative path if you're deployed (Render) and serving the backend at the same domain
-      const res = await axios.get('/api/questions');
-      setQuestions(res.data.questions);
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-    }
-  };
-
+  // load existing questions
   useEffect(() => {
     fetchQuestions();
   }, []);
 
-  // 3) Handle form field changes
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const fetchQuestions = async () => {
+    try {
+      const { data } = await axios.get('/api/questions');
+      setQuestions(data.questions);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // 4) Submit the new question
-  const handleSubmit = async (e) => {
+  // generic change
+  const handleChange = e => {
+    const { name, value } = e.target;
+    if (name === 'level') {
+      // clear keywords & customKeywords when level changes
+      setCustomKeywords([]);
+      setFormData(fd => ({ ...fd, level: value, keywords: [] }));
+    } else {
+      setFormData(fd => ({ ...fd, [name]: value }));
+    }
+  };
+
+  // toggle any checkbox
+  const handleKeywordToggle = e => {
+    const { value, checked } = e.target;
+    setFormData(fd => {
+      const kws = checked
+        ? [...fd.keywords, value]
+        : fd.keywords.filter(k => k !== value);
+      return { ...fd, keywords: kws };
+    });
+  };
+
+  // add a custom keyword
+  const handleAddCustom = () => {
+    const kw = pendingKeyword.trim();
+    if (!kw) return;
+    if (
+      bloomKeywords[formData.level]?.includes(kw) ||
+      customKeywords.includes(kw)
+    ) {
+      setPendingKeyword('');
+      return;
+    }
+    setCustomKeywords(ca => [...ca, kw]);
+    setFormData(fd => ({ ...fd, keywords: [...fd.keywords, kw] }));
+    setPendingKeyword('');
+  };
+
+  const handleSubmit = async e => {
     e.preventDefault();
+    if (!formData.question_no.trim() || !formData.question_text.trim()) {
+      return alert('Enter Q No and Question Text');
+    }
+    const payload = {
+      ...formData,
+      keywords: formData.keywords.join(', ')
+    };
     try {
-      await axios.post('/api/questions', formData);
-      // Reset form
+      await axios.post('/api/questions', payload);
       setFormData({
         question_no: '',
+        question_text: '',
         level: '',
-        keywords: '',
+        keywords: [],
         specification: '',
         co: '',
         po: ''
       });
-      // Refresh the question list
+      setCustomKeywords([]);
       fetchQuestions();
-    } catch (error) {
-      console.error('Error adding question:', error);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add question');
     }
   };
 
-  // 5) Based on the selected level, get the array of possible keywords
-  const possibleKeywords = bloomKeywords[formData.level] || [];
+  // combine official + custom for checkboxes
+  const possible = [
+    ...(bloomKeywords[formData.level] || []),
+    ...customKeywords
+  ];
 
   return (
     <div>
       <h3>Question Mapping</h3>
-      <form onSubmit={handleSubmit} className="row g-3 mb-4">
-        {/* Question No */}
-        <div className="col-md-2">
-          <label className="form-label">Question No</label>
+
+      {/* Question text */}
+      <div className="mb-3">
+        <label className="form-label">Question Text *</label>
+        <textarea
+          name="question_text"
+          className="form-control"
+          rows={3}
+          value={formData.question_text}
+          onChange={handleChange}
+        />
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="row g-3 mb-4 align-items-start"
+      >
+        {/* Q No */}
+        <div className="col-md-1">
+          <label className="form-label">Q No. *</label>
           <input
-            className="form-control"
             name="question_no"
+            className="form-control"
             value={formData.question_no}
             onChange={handleChange}
-            required
           />
         </div>
 
-        {/* Level Dropdown */}
+        {/* Level */}
         <div className="col-md-2">
           <label className="form-label">Level</label>
           <select
-            className="form-select"
             name="level"
+            className="form-select"
             value={formData.level}
             onChange={handleChange}
-            required
           >
-            <option value="">-- Select Level --</option>
-            <option value="Remembering">Remembering</option>
-            <option value="Understanding">Understanding</option>
-            <option value="Applying">Applying</option>
-            <option value="Analyzing">Analyzing</option>
-            <option value="Evaluating">Evaluating</option>
-            <option value="Creating">Creating</option>
-          </select>
-        </div>
-
-        {/* Keywords Dropdown (populated based on level) */}
-        <div className="col-md-2">
-          <label className="form-label">Keywords</label>
-          <select
-            className="form-select"
-            name="keywords"
-            value={formData.keywords}
-            onChange={handleChange}
-            required
-            disabled={!formData.level} // disable if no level selected
-          >
-            <option value="">-- Select Keyword --</option>
-            {possibleKeywords.map((keyword) => (
-              <option key={keyword} value={keyword}>
-                {keyword}
+            <option value="">— none —</option>
+            {Object.keys(bloomKeywords).map(lvl => (
+              <option key={lvl} value={lvl}>
+                {lvl}
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Keywords with checkboxes + custom add */}
+        <div className="col-md-4">
+          <label className="form-label">Keywords</label>
+
+          {/* custom add */}
+          <div className="input-group mb-2">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Add custom"
+              value={pendingKeyword}
+              onChange={e => setPendingKeyword(e.target.value)}
+              disabled={!formData.level}
+            />
+            <button
+              className="btn btn-outline-secondary"
+              type="button"
+              onClick={handleAddCustom}
+              disabled={!pendingKeyword.trim() || !formData.level}
+            >
+              Add
+            </button>
+          </div>
+
+          {/* checkbox list */}
+          <div
+            className="border rounded p-2"
+            style={{ maxHeight: 180, overflowY: 'auto' }}
+          >
+            {formData.level ? (
+              possible.map(kw => (
+                <div className="form-check" key={kw}>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id={`kw-${kw}`}
+                    value={kw}
+                    checked={formData.keywords.includes(kw)}
+                    onChange={handleKeywordToggle}
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor={`kw-${kw}`}
+                  >
+                    {kw}
+                  </label>
+                </div>
+              ))
+            ) : (
+              <div className="text-muted">
+                Please select a level first
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Specification */}
         <div className="col-md-2">
           <label className="form-label">Specification</label>
           <input
-            className="form-control"
             name="specification"
+            className="form-control"
             value={formData.specification}
             onChange={handleChange}
           />
         </div>
 
-        {/* CO (optional) */}
-        <div className="col-md-2">
-          <label className="form-label">CO (optional)</label>
+        {/* CO */}
+        <div className="col-md-1">
+          <label className="form-label">CO</label>
           <input
-            className="form-control"
             name="co"
+            className="form-control"
             value={formData.co}
             onChange={handleChange}
           />
         </div>
 
-        {/* PO (optional) */}
-        <div className="col-md-2">
-          <label className="form-label">PO (optional)</label>
+        {/* PO */}
+        <div className="col-md-1">
+          <label className="form-label">PO</label>
           <input
-            className="form-control"
             name="po"
+            className="form-control"
             value={formData.po}
             onChange={handleChange}
           />
         </div>
 
-        <div className="col-12">
-          <button type="submit" className="btn btn-success">
-            Add Question
+        {/* Submit */}
+        <div className="col-md-1 d-grid">
+          <button type="submit" className="btn btn-success mt-4">
+            Add
           </button>
         </div>
       </form>
 
+      {/* Existing Questions */}
       <h5>Existing Questions</h5>
       <ul className="list-group">
-        {questions.map((q) => (
+        {questions.map(q => (
           <li key={q.id} className="list-group-item">
-            <strong>Q{q.question_no}</strong> - {q.level} | {q.keywords} | {q.specification}
-            {q.co && ` | CO: ${q.co}`}
-            {q.po && ` | PO: ${q.po}`}
+            <strong>Q{q.question_no}:</strong> {q.question_text}
+            <br />
+            <small className="text-muted">
+              {q.level && `${q.level} | `}
+              {q.keywords && `${q.keywords} | `}
+              {q.specification && `${q.specification} | `}
+              {q.co && `CO: ${q.co} | `}
+              {q.po && `PO: ${q.po}`}
+            </small>
           </li>
         ))}
       </ul>
     </div>
   );
 }
-
-export default QuestionMapping;

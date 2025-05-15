@@ -9,10 +9,10 @@ const authRoutes = require('./routes/auth');
 // (Reuse your existing route files for questions, assessments, etc.)
 const questionRoutes = require('./routes/questions');
 const assessmentRoutes = require('./routes/assessments');
-const gradeRoutes = require('./routes/grades');
 const studentRoutes = require('./routes/students');
 const courseRoutes = require('./routes/courses');
 const attemptRoutes = require('./routes/attempts');
+const reportRoutes = require('./routes/reports')
 
 const { authenticate, authorize } = require('./middleware/auth');
 
@@ -28,6 +28,11 @@ app.use(express.static(path.join(__dirname, '../frontend/build')));
 // Public auth
 app.use('/api/auth', authRoutes);
 
+app.use('/api/attempts', authenticate, authorize(['teacher']), attemptRoutes);
+app.use('/api/reports', authenticate, authorize(['teacher']),  reportRoutes);
+
+
+
 // Teacher‐only
 app.use('/api/questions', authenticate, authorize(['teacher']), questionRoutes);
 app.use(
@@ -36,7 +41,7 @@ app.use(
   authorize(['teacher']),
   assessmentRoutes
 );
-app.use('/api/grades', authenticate, authorize(['teacher']), gradeRoutes);
+// app.use('/api/grades', authenticate, authorize(['teacher']), gradeRoutes);
 app.use('/api/students', authenticate, authorize(['teacher']), studentRoutes);
 app.use('/api/courses', authenticate, authorize(['teacher']), courseRoutes);
 

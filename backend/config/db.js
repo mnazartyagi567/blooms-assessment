@@ -1,21 +1,18 @@
 // backend/config/db.js
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const path    = require('path');
+const dbPath  = path.resolve(__dirname, 'database.sqlite');
 
-const dbPath = path.resolve(__dirname, 'database.sqlite');
-// Delete existing DB file on startup if you want a truly fresh start
+// (Re)create fresh DB each run if you like; comment out if not:
 // require('fs').unlinkSync(dbPath);
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error("Error opening database:", err.message);
-  } else {
-    console.log("Connected to SQLite database.");
-  }
+const db = new sqlite3.Database(dbPath, err => {
+  if (err) console.error("DB open error:", err.message);
+  else       console.log("Connected to SQLite DB.");
 });
 
 db.serialize(() => {
-  // 1) Users table w/ role
+  // users w/ role
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,11 +22,12 @@ db.serialize(() => {
     )
   `);
 
-  // 2) Questions
+  // questions
   db.run(`
     CREATE TABLE IF NOT EXISTS questions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       question_no TEXT,
+      question_text TEXT NOT NULL,
       level TEXT,
       keywords TEXT,
       specification TEXT,
@@ -38,7 +36,7 @@ db.serialize(() => {
     )
   `);
 
-  // 3) Students
+  // students
   db.run(`
     CREATE TABLE IF NOT EXISTS students (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,7 +48,7 @@ db.serialize(() => {
     )
   `);
 
-  // 4) Courses
+  // courses
   db.run(`
     CREATE TABLE IF NOT EXISTS courses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +60,7 @@ db.serialize(() => {
     )
   `);
 
-  // 5) Assessments
+  // assessments
   db.run(`
     CREATE TABLE IF NOT EXISTS assessments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,7 +70,7 @@ db.serialize(() => {
     )
   `);
 
-  // 6) Map questions→assessments
+  // map questions→assessments
   db.run(`
     CREATE TABLE IF NOT EXISTS assessment_questions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,28 +79,28 @@ db.serialize(() => {
     )
   `);
 
-  // 7) Student attempts
+  // **student_assessment_attempts** now holds a numeric score
+  // db.run(`DROP TABLE IF EXISTS student_assessment_attempts`);
+
   db.run(`
     CREATE TABLE IF NOT EXISTS student_assessment_attempts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       student_id INTEGER,
       assessment_id INTEGER,
       question_id INTEGER,
-      is_correct INTEGER
+      score INTEGER,
+      UNIQUE(student_id, assessment_id, question_id)
     )
   `);
 
-  // Seed default instructor + student
+  // seed one teacher + one student
   db.get(`SELECT COUNT(*) AS cnt FROM users`, (e, row) => {
     if (!e && row.cnt === 0) {
-      const stmt = db.prepare(
-        `INSERT INTO users (username,password,role) VALUES (?,?,?)`
-      );
-      stmt.run('instructor', 'password', 'teacher');
-      stmt.run('student1', 'password', 'student');
-      stmt.finalize(() =>
-        console.log("Seeded users: instructor/teacher + student1/student")
-      );
+      db.run(`INSERT INTO users (username,password,role) VALUES (?,?,?)`,
+        ['instructor','password','teacher']);
+      db.run(`INSERT INTO users (username,password,role) VALUES (?,?,?)`,
+        ['student1','password','student']);
+      console.log("Seeded users.");
     }
   });
 });

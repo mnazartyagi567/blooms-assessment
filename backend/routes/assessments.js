@@ -1,11 +1,19 @@
 // backend/routes/assessments.js
-const express = require('express');
-const router = express.Router();
-const assessmentController = require('../controllers/assessmentController');
+const express              = require('express');
+const router               = express.Router();
+const AssessmentController = require('../controllers/assessmentController');
 
-router.post('/', assessmentController.createAssessment);
-router.get('/', assessmentController.getAllAssessments);
-router.post('/add-question', assessmentController.addQuestion);
-router.get('/:id/questions', assessmentController.getAssessmentQuestions);
+// Create a new assessment
+router.post('/', AssessmentController.createAssessment);
+
+// List all assessments
+router.get('/', AssessmentController.getAllAssessments);
+
+// Attach a question to an assessment
+// POST { assessment_id, question_id }
+router.post('/questions', AssessmentController.addQuestion);
+
+// Get all questions attached to one assessment
+router.get('/:id/questions', AssessmentController.getAssessmentQuestions);
 
 module.exports = router;
