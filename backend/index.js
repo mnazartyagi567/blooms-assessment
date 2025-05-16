@@ -97,6 +97,14 @@ app.get(
   }
 );
 
+// serve React static files
+app.use(express.static(path.join(__dirname, 'build')));
+
+// any GET that doesn't match /api/* should return index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
 // All other routes → React
 app.get('*', (req, res) =>
   res.sendFile(path.join(__dirname, '../frontend/build/index.html'))
