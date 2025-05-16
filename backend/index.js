@@ -13,6 +13,7 @@ const studentRoutes = require('./routes/students');
 const courseRoutes = require('./routes/courses');
 const attemptRoutes = require('./routes/attempts');
 const reportRoutes = require('./routes/reports')
+const studentReportRoutes = require('./routes/studentReport')
 
 const { authenticate, authorize } = require('./middleware/auth');
 
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // Public auth
 app.use('/api/auth', authRoutes);
+app.use('/api/reports/student', authenticate, authorize(['teacher']),  studentReportRoutes)
 
 app.use('/api/attempts', authenticate, authorize(['teacher']), attemptRoutes);
 app.use('/api/reports', authenticate, authorize(['teacher']),  reportRoutes);

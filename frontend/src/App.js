@@ -1,36 +1,44 @@
-// src/App.js
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import TeacherDashboard from './components/TeacherDashboard';
 import StudentDashboard from './components/StudentDashboard';
 
-export default function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [role, setRole] = useState(localStorage.getItem('role'));
+function App() {
+  const [user, setUser] = useState(null);
 
-  const onLoginSuccess = ({ token, role }) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('role', role);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setToken(token);
-    setRole(role);
+  // On mount, check for a logged-in user in localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('loggedInUser');
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem('loggedInUser');
+      }
+    }
+  }, []);
+
+  const handleLoginSuccess = (u) => {
+    setUser(u);
+    localStorage.setItem('loggedInUser', JSON.stringify(u));
   };
 
-  const onLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    delete axios.defaults.headers.common['Authorization'];
-    setToken(null);
-    setRole(null);
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('loggedInUser');
   };
 
-  if (!token) {
-    return <Login onLoginSuccess={onLoginSuccess} />;
+  // If not logged in, show the login form
+  if (!user) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
   }
-  return role === 'teacher' ? (
-    <TeacherDashboard onLogout={onLogout} />
+
+  // Once logged in, branch on role
+  return user.role === 'teacher' ? (
+    <TeacherDashboard user={user} onLogout={handleLogout} />
   ) : (
-    <StudentDashboard onLogout={onLogout} />
+    <StudentDashboard user={user} onLogout={handleLogout} />
   );
 }
+
+export default App;

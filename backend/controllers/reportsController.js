@@ -1,69 +1,44 @@
 // backend/controllers/reportsController.js
 const db = require('../config/db')
 
-// 1) Class‐level summary by Bloom level
-//    sums up total_appeared & correct answers across all questions
-exports.getClassSummary = (req, res) => {
+/**
+ * Returns per-question attainment counts for one assessment.
+ */
+exports.getAttainmentReport = (req, res) => {
   const { assessmentId } = req.params
+
   const sql = `
     SELECT
-      q.level,
-      SUM(qg.grade_a_count) + SUM(qg.grade_b_count) + SUM(qg.grade_c_count) + SUM(qg.grade_d_count) AS total_responses,
-      SUM(qg.total_appeared) AS total_appeared,
-      -- to compute 'correct', assume A & B are 'correct' (customize if needed):
-      SUM(qg.grade_a_count + qg.grade_b_count) AS correct_responses
-    FROM question_grades qg
-    JOIN questions q ON q.id = qg.question_id
-    WHERE qg.assessment_id = ?
+      q.level                                  AS level,
+      SUM(CASE WHEN saa.score*1.0/aq.max_score >= 0.9 THEN 1 ELSE 0 END) AS excellent,
+      SUM(CASE WHEN saa.score*1.0/aq.max_score >= 0.8 
+                 AND saa.score*1.0/aq.max_score < 0.9 THEN 1 ELSE 0 END) AS very_good,
+      SUM(CASE WHEN saa.score*1.0/aq.max_score >= 0.7 
+                 AND saa.score*1.0/aq.max_score < 0.8 THEN 1 ELSE 0 END) AS good,
+      SUM(CASE WHEN saa.score*1.0/aq.max_score < 0.7 THEN 1 ELSE 0 END) AS not_satisfactory,
+      COUNT(*)                                  AS total
+    FROM student_assessment_attempts saa
+    JOIN assessment_questions aq
+      ON aq.assessment_id = saa.assessment_id
+     AND aq.question_id   = saa.question_id
+    JOIN questions q
+      ON q.id = saa.question_id
+    WHERE saa.assessment_id = ?
     GROUP BY q.level
+    ORDER BY
+      CASE q.level
+        WHEN 'Knowing' THEN 1
+        WHEN 'Understanding' THEN 2
+        WHEN 'Applying' THEN 3
+        WHEN 'Analyzing' THEN 4
+        WHEN 'Evaluating' THEN 5
+        WHEN 'Creating' THEN 6
+        ELSE 99
+      END
   `
+
   db.all(sql, [assessmentId], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message })
-
-    // Ensure all levels present
-    const levels = [
-      'Remembering','Understanding','Applying',
-      'Analyzing','Evaluating','Creating'
-    ]
-    const summary = {}
-    levels.forEach(l => summary[l] = { correct:0, appeared:0 })
-    rows.forEach(r => {
-      summary[r.level] = {
-        correct:  r.correct_responses,
-        appeared: r.total_appeared
-      }
-    })
-    res.json({ classSummary: summary })
-  })
-}
-
-// 2) Student‐level summary by Bloom level
-//    reuses the logic from attemptsController.getReport
-exports.getStudentSummary = (req, res) => {
-  const { assessmentId, studentId } = req.params
-  const sql = `
-    SELECT
-      q.level,
-      SUM(saa.is_correct) AS correct,
-      COUNT(*) AS total
-    FROM student_assessment_attempts saa
-    JOIN questions q ON q.id = saa.question_id
-    WHERE saa.assessment_id = ?
-      AND saa.student_id    = ?
-    GROUP BY q.level
-  `
-  db.all(sql, [assessmentId, studentId], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message })
-
-    const levels = [
-      'Remembering','Understanding','Applying',
-      'Analyzing','Evaluating','Creating'
-    ]
-    const summary = {}
-    levels.forEach(l => summary[l] = { correct:0, total:0 })
-    rows.forEach(r => {
-      summary[r.level] = { correct: r.correct, total: r.total }
-    })
-    res.json({ studentSummary: summary })
+    res.json({ attainment: rows })
   })
 }
