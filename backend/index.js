@@ -24,7 +24,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Serve React
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+// app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // Public auth
 app.use('/api/auth', authRoutes);
@@ -97,17 +97,12 @@ app.get(
   }
 );
 
-// serve React static files
-app.use(express.static(path.join(__dirname, 'build')));
+const reactBuildPath = path.join(__dirname, '../frontend/build');
+app.use(express.static(reactBuildPath));
 
-// any GET that doesn't match /api/* should return index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// Anything that doesn’t start with /api → serve React’s index.html
+app.get(/^\/(?!api\/).*/, (req, res) => {
+  res.sendFile(path.join(reactBuildPath, 'index.html'));
 });
-
-// All other routes → React
-app.get('*', (req, res) =>
-  res.sendFile(path.join(__dirname, '../frontend/build/index.html'))
-);
 
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
