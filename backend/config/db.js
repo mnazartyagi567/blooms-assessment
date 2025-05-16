@@ -61,7 +61,7 @@ db.serialize(() => {
   `);
 
   // assessments
-  // db.run(`DROP TABLE IF EXISTS assessments`);
+  db.run(`DROP TABLE IF EXISTS assessments`);
   db.run(`
     CREATE TABLE IF NOT EXISTS assessments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,7 +72,7 @@ db.serialize(() => {
   `);
 
   // map questions→assessments
-  // db.run(`DROP TABLE IF EXISTS assessment_questions`);
+  db.run(`DROP TABLE IF EXISTS assessment_questions`);
 
   db.run(`
     CREATE TABLE IF NOT EXISTS assessment_questions (
@@ -85,7 +85,7 @@ db.serialize(() => {
   `);
 
   // **student_assessment_attempts** now holds a numeric score
-  // db.run(`DROP TABLE IF EXISTS student_assessment_attempts`);
+  db.run(`DROP TABLE IF EXISTS student_assessment_attempts`);
 
   db.run(`
     CREATE TABLE IF NOT EXISTS student_assessment_attempts (
