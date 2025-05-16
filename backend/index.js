@@ -28,24 +28,23 @@ app.use(bodyParser.json());
 
 // Public auth
 app.use('/api/auth', authRoutes);
-app.use('/api/reports/student', authenticate, authorize(['teacher']),  studentReportRoutes)
+app.use('/api/reports/student', authenticate, authorize(),  studentReportRoutes)
 
-app.use('/api/attempts', authenticate, authorize(['teacher']), attemptRoutes);
-app.use('/api/reports', authenticate, authorize(['teacher']),  reportRoutes);
+app.use('/api/attempts', authenticate, authorize(), attemptRoutes);
+app.use('/api/reports', authenticate, authorize(),  reportRoutes);
 
 
 
 // Teacher‐only
-app.use('/api/questions', authenticate, authorize(['teacher']), questionRoutes);
+app.use('/api/questions', authenticate, authorize(), questionRoutes);
 app.use(
   '/api/assessments',
   authenticate,
-  authorize(['teacher']),
+  authorize(),
   assessmentRoutes
 );
-// app.use('/api/grades', authenticate, authorize(['teacher']), gradeRoutes);
-app.use('/api/students', authenticate, authorize(['teacher']), studentRoutes);
-app.use('/api/courses', authenticate, authorize(['teacher']), courseRoutes);
+app.use('/api/students', authenticate, authorize(), studentRoutes);
+app.use('/api/courses', authenticate, authorize(), courseRoutes);
 
 // Student attempts & teacher can read them both
 app.use('/api/attempts', authenticate, attemptRoutes);
@@ -77,7 +76,7 @@ app.get(
 app.get(
   '/api/results/class-summary/:aid',
   authenticate,
-  authorize(['teacher']),
+  authorize(),
   (req, res) => {
     const db = require('./config/db');
     db.all(
