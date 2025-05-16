@@ -99,9 +99,4 @@ app.get(
 const reactBuildPath = path.join(__dirname, '../frontend/build');
 app.use(express.static(reactBuildPath));
 
-// Anything that doesn’t start with /api → serve React’s index.html
-app.get(/^\/(?!api\/).*/, (req, res) => {
-  res.sendFile(path.join(reactBuildPath, 'index.html'));
-});
-
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
