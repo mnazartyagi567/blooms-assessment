@@ -19,8 +19,8 @@ exports.getStudentAssessmentReport = (req, res) => {
        AND aq.question_id   = saa.question_id
       JOIN questions                  AS q
         ON q.id = saa.question_id
-      WHERE saa.student_id    = ?
-        AND saa.assessment_id = ?
+      WHERE saa.student_id    = $1
+        AND saa.assessment_id = $2
       GROUP BY q.level
     `
   
@@ -48,7 +48,7 @@ exports.getStudentAssessmentReport = (req, res) => {
       const studentSql = `
         SELECT name, program AS programme, semester, academic_year AS course
         FROM students
-        WHERE id = ?
+        WHERE id = $1
       `
       db.get(studentSql, [studentId], (err2, student) => {
         if (err2) return res.status(500).json({ error: err2.message })
@@ -58,7 +58,7 @@ exports.getStudentAssessmentReport = (req, res) => {
           SELECT a.name, a.date, c.name AS course_name
           FROM assessments a
           LEFT JOIN courses c ON c.id = a.course_id
-          WHERE a.id = ?
+          WHERE a.id = $1
         `
         db.get(asmtSql, [assessmentId], (err3, asmt) => {
           if (err3) return res.status(500).json({ error: err3.message })

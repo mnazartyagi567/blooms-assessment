@@ -6,7 +6,7 @@ export default function Navbar({ user, currentView, onNavSelect, onLogout }) {
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
             <div className="container">
                 {/* Brand */}
-                <span className="navbar-brand">Blooms Taxonomy</span>
+                <span className="navbar-brand">Blooms Assessment</span>
 
                 {/* Left–side links */}
                 <div className="collapse navbar-collapse">

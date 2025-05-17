@@ -23,7 +23,7 @@ exports.getAttainmentReport = (req, res) => {
      AND aq.question_id   = saa.question_id
     JOIN questions q
       ON q.id = saa.question_id
-    WHERE saa.assessment_id = ?
+    WHERE saa.assessment_id = $1
     GROUP BY q.level
     ORDER BY
       CASE q.level

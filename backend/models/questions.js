@@ -15,7 +15,7 @@ exports.create = (data, callback) => {
   const sql = `
     INSERT INTO questions
       (question_no, question_text, level, keywords, specification, co, po)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
   `;
   db.run(
     sql,

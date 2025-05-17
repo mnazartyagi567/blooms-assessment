@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   db.get(
-    `SELECT * FROM users WHERE username = ? AND password = ?`,
+    `SELECT * FROM users WHERE username = $1 AND password = $2`,
     [username, password],
     (err, user) => {
       if (err) return res.status(500).json({ error: err.message });

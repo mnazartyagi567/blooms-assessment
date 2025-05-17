@@ -8,7 +8,7 @@ exports.login = (req, res) => {
     return res.status(400).json({ error: 'Username and password are required.' });
   }
 
-  const sql = `SELECT * FROM users WHERE username = ? AND password = ?`;
+  const sql = `SELECT * FROM users WHERE username = $1 AND password = $2`;
   db.get(sql, [username, password], (err, row) => {
     if (err) {
       return res.status(500).json({ error: 'Database error.' });

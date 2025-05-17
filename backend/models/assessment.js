@@ -4,7 +4,7 @@ const db = require('../config/db');
 exports.create = (name, date, course_id, cb) => {
   const sql = `
     INSERT INTO assessments (name, date, course_id)
-      VALUES (?, ?, ?)
+      VALUES ($1, $2, $3)
   `;
   db.run(sql, [name, date, course_id], function(err) {
     cb(err, this.lastID);
@@ -24,7 +24,7 @@ exports.addQuestionToAssessment = (assessment_id, question_id, max_score, cb) =>
   const sql = `
     INSERT INTO assessment_questions
       (assessment_id, question_id, max_score)
-    VALUES (?, ?, ?)
+    VALUES ($1, $2, $3)
   `;
   db.run(sql, [assessment_id, question_id, max_score], cb);
 };
@@ -42,7 +42,7 @@ exports.getAssessmentQuestions = (assessment_id, cb) => {
       aq.max_score
     FROM assessment_questions aq
     JOIN questions q ON q.id = aq.question_id
-    WHERE aq.assessment_id = ?
+    WHERE aq.assessment_id = $1
     ORDER BY q.question_no
   `;
   db.all(sql, [assessment_id], cb);

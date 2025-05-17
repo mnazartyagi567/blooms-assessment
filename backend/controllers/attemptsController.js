@@ -7,7 +7,7 @@ exports.recordAttempt = (req, res) => {
   const sql = `
     INSERT INTO student_assessment_attempts
       (student_id,assessment_id,question_id,score)
-    VALUES (?,?,?,?)
+    VALUES ($1,$2,$3,$4)
     ON CONFLICT(student_id,assessment_id,question_id) 
       DO UPDATE SET score = excluded.score
   `;
@@ -29,8 +29,8 @@ exports.getStudentReport = (req,res) => {
            COUNT(*)          AS num_questions
       FROM student_assessment_attempts saa
       JOIN questions q ON q.id = saa.question_id
-     WHERE saa.student_id    = ?
-       AND saa.assessment_id = ?
+     WHERE saa.student_id    = $1
+       AND saa.assessment_id = $2
      GROUP BY q.level
   `;
   db.all(sql,[studentId,assessmentId],(err,rows)=>{
@@ -62,7 +62,7 @@ exports.getClassReport = (req,res) => {
            COUNT(*)           AS total_entries
       FROM student_assessment_attempts saa
       JOIN questions q ON q.id = saa.question_id
-     WHERE saa.assessment_id = ?
+     WHERE saa.assessment_id = $1
      GROUP BY q.level
   `;
   db.all(sql,[assessmentId],(err,rows)=>{
