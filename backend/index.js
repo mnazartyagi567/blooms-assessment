@@ -96,7 +96,11 @@ app.get(
   }
 );
 
-const reactBuildPath = path.join(__dirname, '../frontend/build');
-app.use(express.static(reactBuildPath));
+app.use(express.static(path.join(__dirname, '../frontend/build')))
+
+// any GET that isn’t an API route should serve index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'))
+})
 
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
