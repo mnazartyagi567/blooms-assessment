@@ -132,13 +132,12 @@ export default function AssessmentReport({ assessmentId }) {
     y +=  20;
   
     // build level table head+body
-    const levelHead = [[
-      'Q No', 'Level', 'Spec',
+    const levelHead = [[ 'Level', 'Spec',
       'Excellent', 'Very Good', 'Good',
-      'Satisfactory', 'Not Satisfactory', 'Total'
+      'Satisfactory', 'Not Satisfactory', 'Total Students'
     ]];
     const levelBody = rows.map(r => ([
-      r.questionNo ?? r.question_no,
+      // r.questionNo ?? r.question_no,
       r.level,
       r.spec ?? r.specification,
       r.excellent,
@@ -241,7 +240,7 @@ export default function AssessmentReport({ assessmentId }) {
             <th>Good</th>
             <th>Satisfactory</th>
             <th>Not Satisfactory</th>
-            <th>Total</th>
+            <th>Total Students</th>
           </tr>
         </thead>
         <tbody>

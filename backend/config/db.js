@@ -63,12 +63,25 @@ function run (text, params, cb) {
     cb = params
     params = []
   }
-  const sql = text.trim().endsWith('RETURNING id')
+
+  // detect DELETE statements
+  const isDelete = text.trim().toUpperCase().startsWith('DELETE')
+
+  // only append RETURNING id for non‐DELETEs
+  const sql = isDelete
     ? text
-    : text + ' RETURNING id'
+    : (text.trim().endsWith('RETURNING id')
+        ? text
+        : text + ' RETURNING id')
 
   const p = pool.query(sql, params)
     .then(res => {
+      if (isDelete) {
+        // DELETE: no id to return, just signal success
+        if (cb) cb(null)
+        return
+      }
+      // INSERT/UPDATE: grab the generated id
       const out = { lastID: res.rows[0].id }
       if (cb) cb(null, out)
       return out

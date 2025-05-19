@@ -257,10 +257,6 @@ export default function QuestionMapping() {
     if (!formData.question_no.trim() || !formData.question_text.trim()) {
       return alert('Enter Q No and Question Text');
     }
-    const payload = {
-      ...formData,
-      keywords: formData.keywords.join(', ')
-    };
     try {
       if (editId) {
         await axios.put(`/api/questions/${editId}`, {

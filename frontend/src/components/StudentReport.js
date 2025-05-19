@@ -7,9 +7,10 @@ import autoTable from 'jspdf-autotable';
 import 'chart.js/auto';
 
 export default function StudentReport() {
+  const initialStudentId = ''
   const [students,    setStudents]    = useState([]);
   const [assessments, setAssessments] = useState([]);
-  const [studentId,   setStudentId]   = useState('');
+  const [studentId,   setStudentId]   = useState(initialStudentId);
   const [asmtId,      setAsmtId]      = useState('');
   const [report,      setReport]      = useState(null);
 
@@ -20,6 +21,9 @@ export default function StudentReport() {
 
   // load dropdowns
   useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const sid = q.get('studentId');
+    if (sid) setStudentId(sid);
     axios.get('/api/students').then(r => setStudents(r.data.students));
     axios.get('/api/assessments').then(r => setAssessments(r.data.assessments));
   }, []);
