@@ -1,6 +1,6 @@
 // src/components/StudentDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import AssessmentsList  from './assessments/AssessmentsList';
+// import AssessmentsList  from './assessments/AssessmentsList';
 import StudentReport    from './StudentReport';
 import axios            from 'axios';
 

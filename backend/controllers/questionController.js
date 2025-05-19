@@ -1,5 +1,5 @@
 
-const questionModel = require('../models/question');
+const questionModel = require('../models/questions');
 
 exports.getAllQuestions = (req, res) => {
   questionModel.getAll((err, questions) => {
@@ -20,5 +20,24 @@ exports.createQuestion = (req, res) => {
       return res.status(500).json({ error: err.message });
     }
     res.json({ message: 'Question added successfully', id: lastID });
+  });
+};
+
+
+// Update
+exports.updateQuestion = (req, res) => {
+  const id = Number(req.params.id);
+  questionModel.update(id, req.body, err => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Question updated' });
+  });
+};
+
+// Delete
+exports.deleteQuestion = (req, res) => {
+  const id = Number(req.params.id);
+  questionModel.delete(id, err => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Question deleted' });
   });
 };

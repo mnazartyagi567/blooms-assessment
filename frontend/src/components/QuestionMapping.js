@@ -197,6 +197,7 @@ export default function QuestionMapping() {
   // hold any user‐added keywords for the current question
   const [customKeywords, setCustomKeywords] = useState([]);
   const [pendingKeyword, setPendingKeyword] = useState('');
+  const [editId, setEditId] = useState(null);
 
   // load existing questions
   useEffect(() => {
@@ -261,7 +262,18 @@ export default function QuestionMapping() {
       keywords: formData.keywords.join(', ')
     };
     try {
-      await axios.post('/api/questions', payload);
+      if (editId) {
+        await axios.put(`/api/questions/${editId}`, {
+          ...formData,
+          keywords: formData.keywords.join(', ')
+        });
+        setEditId(null);
+      } else {
+        await axios.post('/api/questions', {
+          ...formData,
+          keywords: formData.keywords.join(', ')
+        });
+      }
       setFormData({
         question_no: '',
         question_text: '',
@@ -279,6 +291,33 @@ export default function QuestionMapping() {
     }
   };
 
+ // ** delete handler **
+ const handleDelete = async (id) => {
+   if (!window.confirm('Really delete this question (and all its mappings & scores)?')) return;
+   try {
+     await axios.delete(`/api/questions/${id}`);
+     fetchQuestions();
+   } catch(err) {
+     console.error(err);
+     alert('Delete failed');
+   }
+ };
+
+ // ** edit handler – prefill form & set editId **
+ const handleEdit = (q) => {
+   setEditId(q.id);
+   setFormData({
+     question_no:   q.question_no || '',
+     question_text: q.question_text,
+     level:         q.level || '',
+     keywords:      q.keywords ? q.keywords.split(',').map(k=>k.trim()) : [],
+     specification: q.specification || '',
+     co:            q.co || '',
+     po:            q.po || ''
+   });
+   setCustomKeywords([]);  // or re-derive from q.keywords
+ };
+
   // combine official + custom for checkboxes
   const possible = [
     ...(bloomKeywords[formData.level] || []),
@@ -288,6 +327,8 @@ export default function QuestionMapping() {
   return (
     <div>
       <h3>Question Mapping</h3>
+           {/* show whether we’re editing or adding */}
+   <h5>{editId ? 'Edit Question' : 'Add New Question'}</h5>
 
       {/* Question text */}
       <div className="mb-3">
@@ -425,9 +466,9 @@ export default function QuestionMapping() {
 
         {/* Submit */}
         <div className="col-md-1 d-grid">
-          <button type="submit" className="btn btn-success mt-4">
-            Add
-          </button>
+        <button type="submit" className="btn btn-success mt-4">
+           {editId ? 'Save Changes' : 'Add'}
+         </button>
         </div>
       </form>
 
@@ -435,7 +476,7 @@ export default function QuestionMapping() {
       <h5>Existing Questions</h5>
       <ul className="list-group">
         {questions.map(q => (
-          <li key={q.id} className="list-group-item">
+          <li key={q.id} className="list-group-item position-relative">
             <strong>Q{q.question_no}:</strong> {q.question_text}
             <br />
             <small className="text-muted">
@@ -445,6 +486,24 @@ export default function QuestionMapping() {
               {q.co && `CO: ${q.co} | `}
               {q.po && `PO: ${q.po}`}
             </small>
+            {/* ——— Edit/Delete buttons ——— */}
+            <div
+            className="position-absolute d-flex gap-2"
+            style={{ bottom: '10px', right: '10px' }}
+          >
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => handleEdit(q)}
+            >
+              Edit
+            </button>
+            <button
+              className="btn btn-sm btn-outline-danger"
+              onClick={() => handleDelete(q.id)}
+            >
+              Delete
+            </button>
+          </div>
           </li>
         ))}
       </ul>
