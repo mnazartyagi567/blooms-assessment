@@ -1,5 +1,6 @@
 // backend/controllers/attemptsController.js
 const db = require('../config/db');
+const Attempt = require('../models/attempt');
 
 // upsert a single student’s question score
 exports.recordAttempt = (req, res) => {
@@ -82,5 +83,14 @@ exports.getClassReport = (req,res) => {
       };
     });
     res.json({ classSummary: summary });
+  });
+};
+
+// GET /api/attempts/score
+exports.getAttemptScore = (req, res) => {
+  const { student_id, assessment_id, question_id } = req.query;
+  Attempt.getScore(student_id, assessment_id, question_id, (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ score: row?.score ?? null });
   });
 };

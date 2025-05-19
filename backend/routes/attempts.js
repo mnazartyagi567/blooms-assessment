@@ -11,4 +11,6 @@ router.post('/record', A.recordAttempt);
 // GET  /api/attempts/report/:studentId/:assessmentId
 router.get('/report/:studentId/:assessmentId', A.getStudentReport);
 
+router.get('/score',  A.getAttemptScore);
+
 module.exports = router;

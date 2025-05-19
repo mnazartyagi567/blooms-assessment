@@ -42,3 +42,14 @@ exports.getAssessmentQuestions = (req, res) => {
     }
   );
 };
+
+exports.removeQuestion = (req, res) => {
+  const aqId = Number(req.params.aqId)
+  if (!aqId) {
+    return res.status(400).json({ error: 'aqId required' })
+  }
+  model.removeQuestionFromAssessment(aqId, err => {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json({ success: true })
+  })
+}

@@ -32,3 +32,14 @@ exports.getAttemptsForAssessment = (assessment_id, callback) => {
   `;
   db.all(sql, [assessment_id], callback);
 };
+
+exports.getScore = (student_id, assessment_id, question_id, cb) => {
+  const sql = `
+    SELECT score
+      FROM student_assessment_attempts
+     WHERE student_id    = $1
+       AND assessment_id = $2
+       AND question_id   = $3
+  `;
+  db.get(sql, [student_id, assessment_id, question_id], cb);
+};
