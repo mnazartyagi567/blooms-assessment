@@ -2,54 +2,73 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function StudentList() {
-  const [students, setStudents] = useState([])
-  const [formData, setFormData] = useState({
-    name: '',
-    roll_no: '',
-    program: '',
-    semester: '',
-    academic_year: ''
+export default function StudentList() {
+  const [students, setStudents]     = useState([])
+  const [formData, setFormData]     = useState({
+    name: '', roll_no: '', program: '', semester: '', academic_year: ''
   })
+  const [editingId, setEditingId]   = useState(null)
 
-  // Fetch all students on mount
+  // 1) fetch students
   const fetchStudents = async () => {
     try {
-      const res = await axios.get('/api/students')
-      setStudents(res.data.students)
+      const { data } = await axios.get('/api/students')
+      setStudents(data.students)
     } catch (err) {
       console.error('Failed to fetch students', err)
     }
   }
+   useEffect(() => {
+       fetchStudents()
+     }, [])
 
-  useEffect(() => {
-    fetchStudents()
-  }, [])
-
-  // Handle form field changes
+  // 2) two‐way bind form
   const handleChange = e => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData(fd => ({ ...fd, [e.target.name]: e.target.value }))
   }
 
-  // Submit new student
+  // 3) add or save
   const handleSubmit = async e => {
     e.preventDefault()
     try {
-      await axios.post('/api/students', formData)
-      setFormData({
-        name: '',
-        roll_no: '',
-        program: '',
-        semester: '',
-        academic_year: ''
-      })
+      if (editingId) {
+        // UPDATE
+        await axios.put(`/api/students/${editingId}`, formData)
+      } else {
+        // CREATE
+        await axios.post('/api/students', formData)
+      }
+      // reset
+      setEditingId(null)
+      setFormData({ name:'', roll_no:'', program:'', semester:'', academic_year:'' })
       fetchStudents()
     } catch (err) {
-      console.error('Failed to add student', err)
-      alert('Could not add student')
+      console.error('Save failed', err)
+      alert('Could not save student')
+    }
+  }
+
+  // 4) start editing
+  const handleEdit = s => {
+    setEditingId(s.id)
+    setFormData({
+      name:          s.name,
+      roll_no:       s.roll_no,
+      program:       s.program,
+      semester:      s.semester,
+      academic_year: s.academic_year
+    })
+  }
+
+  // 5) delete (and cascade attempts)
+  const handleDelete = async id => {
+    if (!window.confirm('Delete this student and all their scores?')) return
+    try {
+      await axios.delete(`/api/students/${id}`)
+      fetchStudents()
+    } catch (err) {
+      console.error('Delete failed', err)
+      alert('Could not delete student')
     }
   }
 
@@ -57,13 +76,13 @@ function StudentList() {
     <div>
       <h3>Students</h3>
 
-      {/* Add Student Form */}
+      {/* ─── add / edit form ─── */}
       <form onSubmit={handleSubmit} className="row g-3 mb-4">
         <div className="col-md-3">
           <label className="form-label">Name</label>
           <input
-            className="form-control"
             name="name"
+            className="form-control"
             value={formData.name}
             onChange={handleChange}
             required
@@ -72,8 +91,8 @@ function StudentList() {
         <div className="col-md-3">
           <label className="form-label">Roll No</label>
           <input
-            className="form-control"
             name="roll_no"
+            className="form-control"
             value={formData.roll_no}
             onChange={handleChange}
           />
@@ -81,8 +100,8 @@ function StudentList() {
         <div className="col-md-2">
           <label className="form-label">Program</label>
           <input
-            className="form-control"
             name="program"
+            className="form-control"
             value={formData.program}
             onChange={handleChange}
           />
@@ -90,9 +109,9 @@ function StudentList() {
         <div className="col-md-2">
           <label className="form-label">Semester</label>
           <input
-            className="form-control"
             type="number"
             name="semester"
+            className="form-control"
             value={formData.semester}
             onChange={handleChange}
           />
@@ -100,38 +119,64 @@ function StudentList() {
         <div className="col-md-2">
           <label className="form-label">Academic Year</label>
           <input
-            className="form-control"
             name="academic_year"
+            className="form-control"
             value={formData.academic_year}
             onChange={handleChange}
           />
         </div>
         <div className="col-12">
           <button type="submit" className="btn btn-primary">
-            Add Student
+            {editingId ? 'Save' : 'Add Student'}
           </button>
+          {editingId && (
+            <button
+              type="button"
+              className="btn btn-secondary ms-2"
+              onClick={() => {
+                setEditingId(null)
+                setFormData({ name:'', roll_no:'', program:'', semester:'', academic_year:'' })
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </form>
 
-      {/* Existing Students List */}
+      {/* ─── list ─── */}
       <ul className="list-group">
         {students.map(s => (
-          <li key={s.id} className="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    {s.name} (Roll No: {s.roll_no}) - Program: {s.program}, Sem: {s.semester}, Year: {s.academic_year}
-                  </div>
-                  {/* ←–– plain link navigates browser to your report page */}
-                  <a
-                    href={`/student-report?studentId=${s.id}`}
-                    className="btn btn-sm btn-outline-primary"
-                  >
-                    See Report
-                  </a>
+          <li
+            key={s.id}
+            className="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <div>
+              {s.name} (Roll No: {s.roll_no}) – Program: {s.program}, Sem: {s.semester}, Year: {s.academic_year}
+            </div>
+            <div>
+              <button
+                className="btn btn-sm btn-outline-secondary me-2"
+                onClick={() => handleEdit(s)}
+              >
+                Edit
+              </button>
+              <button
+                className="btn btn-sm btn-outline-danger me-2"
+                onClick={() => handleDelete(s.id)}
+              >
+                Delete
+              </button>
+              <a
+                href={`/student-report?studentId=${s.id}`}
+                className="btn btn-sm btn-outline-primary"
+              >
+                See Report
+              </a>
+            </div>
           </li>
         ))}
       </ul>
     </div>
   )
 }
-
-export default StudentList

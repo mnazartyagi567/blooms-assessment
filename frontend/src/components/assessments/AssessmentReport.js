@@ -47,6 +47,12 @@ export default function AssessmentReport({ assessmentId }) {
       .catch(console.error)
   }, [assessmentId])
 
+  const questionMaxMap = {};
+details.forEach(d => {
+  questionMaxMap[d.question_no] = d.max_score;
+});
+const allMaxTotal = Object.values(questionMaxMap).reduce((sum, m) => sum + m, 0);
+
   if (!rows.length) return <p>Loading report…</p>
 
   //
@@ -86,6 +92,70 @@ export default function AssessmentReport({ assessmentId }) {
     maintainAspectRatio: false
   }
 
+   //
+  // Build the “per‐attempt raw‐score” chart data
+  //
+  // const LEVEL_ORDER = [
+  //   'Remembering',
+  //   'Understanding',
+  //   'Applying',
+  //   'Analyzing',
+  //   'Evaluating',
+  //   'Creating',
+  // ];
+
+  // const chartData2 = {
+  //   labels: LEVEL_ORDER,
+  //   datasets: details.map(d => {
+  //     // figure % for color
+  //     const pct = (d.obtained / d.max_score) * 100;
+  //     let bg;
+  //     if (pct >= 71)       bg = 'rgba(33,150,243,0.7)';
+  //     else if (pct >= 51)  bg = 'rgba(76,175,80,0.7)';
+  //     else                 bg = 'rgba(244,67,54,0.7)';
+
+  //     return {
+  //       label:            `${d.student} Q${d.question_no}`,
+  //       data:             LEVEL_ORDER.map(l => l === d.level ? d.obtained : null),
+  //       backgroundColor:  bg,
+  //       borderColor:      bg,
+  //       borderWidth:      1,
+  //       // stash max for the tooltip
+  //       maxScore:         d.max_score,
+  //     };
+  //   })
+  // };
+
+  // const chartOptions2 = {
+  //   scales: {
+  //     x: {
+  //       title:   { display: true, text: 'Cognitive Level' },
+  //       stacked: false
+  //     },
+  //     y: {
+  //       beginAtZero: true,
+  //       title: { display: true, text: 'Raw Score' }
+  //     }
+  //   },
+  //   plugins: {
+  //     tooltip: {
+  //       callbacks: {
+  //         label: ctx => {
+  //           const ds    = ctx.dataset;
+  //           const got   = ctx.parsed.y;
+  //           const total = ds.maxScore;
+  //           return `${ds.label}: ${got} / ${total}`;
+  //         }
+  //       }
+  //     },
+  //     legend: {
+  //       position: 'bottom',
+  //       labels: { boxWidth: 12, font: { size: 9 } }
+  //     }
+  //   },
+  //   maintainAspectRatio: false
+  // };
+
   const saveFeedback = () => {
     if (!draftFeedback.trim()) {
       return alert('Feedback is required');
@@ -113,6 +183,30 @@ export default function AssessmentReport({ assessmentId }) {
       })
       .catch(console.error);
   };
+
+  const classScores = (() => {
+    // 1) gather per-student obtained
+    const obtainedMap = {};
+    details.forEach(d => {
+      if (!obtainedMap[d.student]) obtainedMap[d.student] = 0;
+      obtainedMap[d.student] += d.obtained;
+    });
+  
+    // 2) make sure every student is in the map, even if they have 0
+    const studentNames = Array.from(new Set(details.map(d => d.student)));
+    // (If you need students who have *no* details at all, you'll need to fetch the full student list here)
+  
+    // 3) build array, using the **same** allMaxTotal for everyone
+    const arr = studentNames.map(name => {
+      const obtained = obtainedMap[name] || 0;
+      const pct      = allMaxTotal ? (obtained / allMaxTotal) * 100 : 0;
+      return { student: name, obtained, max: allMaxTotal, pct };
+    });
+  
+    // 4) sort & rank
+    arr.sort((a, b) => b.pct - a.pct);
+    return arr.map((cs, i) => ({ ...cs, rank: i + 1 }));
+  })();
 
   //
   // PDF download: same as before (you can extend to include the details table as a second page)
@@ -192,6 +286,31 @@ export default function AssessmentReport({ assessmentId }) {
   
     // advance y again
     y = doc.lastAutoTable.finalY +  30;
+
+    // ————————— Page X: Class-wise Scores —————————
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text('Class-wise Scores', margin, 50);
+    const cwHead = [[
+      'Rank', 'Student',
+      'Total Obtained Marks', 'Total Max Marks', 'Percentage'
+    ]];
+    const cwBody = classScores.map(cs => ([
+      cs.rank,
+      cs.student,
+      cs.obtained,
+      cs.max,
+      `${cs.pct.toFixed(0)}%`
+    ]));
+    autoTable(doc, {
+      head:       cwHead,
+      body:       cwBody,
+      startY:     80,
+      margin:     { left: margin, right: margin },
+      styles:     { fontSize: 10 },
+      headStyles: { fillColor: [33, 150, 243] },
+      theme:      'grid'
+    });
   
     // ————————— Page 3: Chart —————————
     doc.addPage();
@@ -244,8 +363,8 @@ export default function AssessmentReport({ assessmentId }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map(r => (
-            <tr key={r.question_no}>
+          {rows.map((r, i) => (
+                <tr key={i}>
               <td>{r.level}</td>
               <td>{r.spec}</td>
               <td>{r.excellent}</td>
@@ -292,6 +411,38 @@ export default function AssessmentReport({ assessmentId }) {
         </>
       )}
 
+          {/* ——— Class-wise Scores ——— */}
+          {classScores.length > 0 && (
+        <>
+          <h4 className="mt-5">Class-wise Scores</h4>
+          <table
+            className="table table-sm mx-auto"
+            style={{ display: 'inline-table' }}
+          >
+            <thead className="table-light">
+              <tr>
+                <th>Rank</th>
+                <th>Student</th>
+                <th>Marks Obtained</th>
+                <th>Total Marks</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classScores.map(cs => (
+                <tr key={cs.student}>
+                  <td>{cs.rank}</td>
+                  <td>{cs.student}</td>
+                  <td>{cs.obtained}</td>
+                  <td>{cs.max}</td>
+                  <td>{cs.pct.toFixed(0)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
       {/* ——— Chart ——— */}
       <div style={{ maxWidth: 600, margin: '1rem auto' }}>
         <Bar
@@ -300,6 +451,14 @@ export default function AssessmentReport({ assessmentId }) {
           options={chartOptions}
         />
       </div>
+      {/* <h4 className="mt-5">Raw Scores per Question by Level</h4>
+      <div style={{ maxWidth: 800, margin: '1rem auto', height: '400px' }}>
+        <Bar
+          id="raw-score-chart"
+          data={chartData2}
+          options={chartOptions2}
+        />
+      </div> */}
 
       {/* ——— Instructor Feedback ——— */}
       <div className="mt-4 text-start w-75 mx-auto">

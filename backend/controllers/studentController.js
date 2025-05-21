@@ -14,3 +14,20 @@ exports.getAllStudents = (req, res) => {
     res.json({ students: rows });
   });
 };
+
+exports.updateStudent = (req, res) => {
+  const id = Number(req.params.id)
+  studentModel.update(id, req.body, err => {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json({ success: true })
+  })
+}
+
+exports.deleteStudent = (req, res) => {
+  const id = Number(req.params.id)
+  studentModel.delete(id, err => {
+    if (err) return res.status(500).json({ error: err.message })
+    res.json({ success: true })
+  })
+}
+

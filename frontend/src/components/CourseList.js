@@ -11,6 +11,7 @@ function CourseList() {
     semester: '',
     academic_year: ''
   });
+  const [editingId, setEditingId] = useState(null)
 
   const fetchCourses = async () => {
     const res = await axios.get('/api/courses');
@@ -27,7 +28,12 @@ function CourseList() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post('/api/courses', formData);
+    if (editingId) {
+      await axios.put(`/api/courses/${editingId}`, formData)
+      setEditingId(null)
+    } else {
+      await axios.post('/api/courses', formData)
+    }
     setFormData({
       name: '',
       code: '',
@@ -37,6 +43,23 @@ function CourseList() {
     });
     fetchCourses();
   };
+
+   const handleEdit = c => {
+       setEditingId(c.id)
+       setFormData({
+         name: c.name,
+       code: c.code,
+         program: c.program,
+         semester: c.semester,
+         academic_year: c.academic_year
+       })
+     }
+    
+     const handleDelete = async id => {
+       if (!window.confirm('Delete this course and all its assessments?')) return
+       await axios.delete(`/api/courses/${id}`)
+       fetchCourses()
+     }
 
   return (
     <div>
@@ -90,14 +113,29 @@ function CourseList() {
           />
         </div>
         <div className="col-12">
-          <button type="submit" className="btn btn-primary">Add Course</button>
+        <button type="submit" className="btn btn-primary">
+           {editingId ? 'Save Changes' : 'Add Course'}
+         </button>
         </div>
       </form>
 
       <ul className="list-group">
-        {courses.map((c) => (
-          <li key={c.id} className="list-group-item">
-            {c.name} ({c.code}) - {c.program}, Sem: {c.semester}, Year: {c.academic_year}
+        {courses.map(c => (
+          <li key={c.id}
+              className="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              {c.name} ({c.code}) – {c.program}, Sem: {c.semester}, Year: {c.academic_year}
+            </div>
+            <div>
+              <button
+                className="btn btn-sm btn-outline-secondary me-2"
+                onClick={() => handleEdit(c)}
+              >Edit</button>
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleDelete(c.id)}
+              >Delete</button>
+            </div>
           </li>
         ))}
       </ul>
