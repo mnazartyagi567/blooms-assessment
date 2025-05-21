@@ -116,6 +116,18 @@ function CourseList() {
         <button type="submit" className="btn btn-primary">
            {editingId ? 'Save Changes' : 'Add Course'}
          </button>
+         {editingId && (
+            <button
+              type="button"
+              className="btn btn-secondary ms-2"
+              onClick={() => {
+                setEditingId(null)
+                setFormData({ name:'', code:'', program:'', semester:'', academic_year:'' })
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </form>
 

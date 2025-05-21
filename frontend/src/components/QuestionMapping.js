@@ -287,32 +287,32 @@ export default function QuestionMapping() {
     }
   };
 
- // ** delete handler **
- const handleDelete = async (id) => {
-   if (!window.confirm('Really delete this question (and all its mappings & scores)?')) return;
-   try {
-     await axios.delete(`/api/questions/${id}`);
-     fetchQuestions();
-   } catch(err) {
-     console.error(err);
-     alert('Delete failed');
-   }
- };
+  // ** delete handler **
+  const handleDelete = async (id) => {
+    if (!window.confirm('Really delete this question (and all its mappings & scores)?')) return;
+    try {
+      await axios.delete(`/api/questions/${id}`);
+      fetchQuestions();
+    } catch (err) {
+      console.error(err);
+      alert('Delete failed');
+    }
+  };
 
- // ** edit handler – prefill form & set editId **
- const handleEdit = (q) => {
-   setEditId(q.id);
-   setFormData({
-     question_no:   q.question_no || '',
-     question_text: q.question_text,
-     level:         q.level || '',
-     keywords:      q.keywords ? q.keywords.split(',').map(k=>k.trim()) : [],
-     specification: q.specification || '',
-     co:            q.co || '',
-     po:            q.po || ''
-   });
-   setCustomKeywords([]);  // or re-derive from q.keywords
- };
+  // ** edit handler – prefill form & set editId **
+  const handleEdit = (q) => {
+    setEditId(q.id);
+    setFormData({
+      question_no: q.question_no || '',
+      question_text: q.question_text,
+      level: q.level || '',
+      keywords: q.keywords ? q.keywords.split(',').map(k => k.trim()) : [],
+      specification: q.specification || '',
+      co: q.co || '',
+      po: q.po || ''
+    });
+    setCustomKeywords([]);  // or re-derive from q.keywords
+  };
 
   // combine official + custom for checkboxes
   const possible = [
@@ -323,9 +323,10 @@ export default function QuestionMapping() {
   return (
     <div>
       <h3>Question Mapping</h3>
-           {/* show whether we’re editing or adding */}
-   <h5>{editId ? 'Edit Question' : 'Add New Question'}</h5>
+      {/* show whether we’re editing or adding */}
+      <h5>{editId ? 'Edit Question' : 'Add New Question'}</h5>
 
+      {/* Question text */}
       {/* Question text */}
       <div className="mb-3">
         <label className="form-label">Question Text *</label>
@@ -340,7 +341,7 @@ export default function QuestionMapping() {
 
       <form
         onSubmit={handleSubmit}
-        className="row g-3 mb-4 align-items-start"
+        className="row g-3 mb-4 align-items-end"  // ← align all cols at bottom
       >
         {/* Q No */}
         <div className="col-md-1">
@@ -371,11 +372,9 @@ export default function QuestionMapping() {
           </select>
         </div>
 
-        {/* Keywords with checkboxes + custom add */}
+        {/* Keywords */}
         <div className="col-md-4">
           <label className="form-label">Keywords</label>
-
-          {/* custom add */}
           <div className="input-group mb-2">
             <input
               type="text"
@@ -394,8 +393,6 @@ export default function QuestionMapping() {
               Add
             </button>
           </div>
-
-          {/* checkbox list */}
           <div
             className="border rounded p-2"
             style={{ maxHeight: 180, overflowY: 'auto' }}
@@ -411,18 +408,13 @@ export default function QuestionMapping() {
                     checked={formData.keywords.includes(kw)}
                     onChange={handleKeywordToggle}
                   />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`kw-${kw}`}
-                  >
+                  <label className="form-check-label" htmlFor={`kw-${kw}`}>
                     {kw}
                   </label>
                 </div>
               ))
             ) : (
-              <div className="text-muted">
-                Please select a level first
-              </div>
+              <div className="text-muted">Please select a level first</div>
             )}
           </div>
         </div>
@@ -460,13 +452,34 @@ export default function QuestionMapping() {
           />
         </div>
 
-        {/* Submit */}
-        <div className="col-md-1 d-grid">
-        <button type="submit" className="btn btn-success mt-4">
-           {editId ? 'Save Changes' : 'Add'}
-         </button>
+        {/* Submit / Cancel */}
+        <div className="col-md-1 d-flex flex-column">
+          <button type="submit" className="btn btn-success mb-2">
+            {editId ? 'Save Changes' : 'Add'}
+          </button>
+          {editId && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setEditId(null)
+                setFormData({
+                  question_text: '',
+                  question_no: '',
+                  level: '',
+                  pendingKeyword: '',
+                  specification: '',
+                  co: '',
+                  po: ''
+                })
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </form>
+
 
       {/* Existing Questions */}
       <h5>Existing Questions</h5>
@@ -484,22 +497,22 @@ export default function QuestionMapping() {
             </small>
             {/* ——— Edit/Delete buttons ——— */}
             <div
-            className="position-absolute d-flex gap-2"
-            style={{ bottom: '10px', right: '10px' }}
-          >
-            <button
-              className="btn btn-sm btn-outline-primary"
-              onClick={() => handleEdit(q)}
+              className="position-absolute d-flex gap-2"
+              style={{ bottom: '10px', right: '10px' }}
             >
-              Edit
-            </button>
-            <button
-              className="btn btn-sm btn-outline-danger"
-              onClick={() => handleDelete(q.id)}
-            >
-              Delete
-            </button>
-          </div>
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => handleEdit(q)}
+              >
+                Edit
+              </button>
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleDelete(q.id)}
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
